@@ -33,18 +33,18 @@ impl Position {
 
     fn parse_line(&mut self, line: &str) {
         let (name, value) = line.split_once(" ").unwrap(); 
-        let value_u16 = value.parse::<i32>().unwrap();
+        let value_i32 = value.parse::<i32>().unwrap();
 
         match name.as_ref() {
             "forward" => {
-                self.increase_horizontal(value_u16);
-                self.increase_depth(self.aim * value_u16);
+                self.increase_horizontal(value_i32);
+                self.increase_depth(self.aim * value_i32);
             }
             "down" => {
-                self.increase_aim(value_u16);
+                self.increase_aim(value_i32);
             }
             "up" => { 
-                self.decrease_aim(value_u16);
+                self.decrease_aim(value_i32);
             }
             _ => {}
         }
