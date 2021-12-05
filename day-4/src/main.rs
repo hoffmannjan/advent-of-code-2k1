@@ -2,7 +2,7 @@ use std::fs;
 
 struct Board { 
     data: Vec<Vec<u32>>,
-    checked: Vec<Vec<bool>>
+    won: bool
 }
 
 const BOARD_WIDTH: usize = 5;
@@ -27,42 +27,42 @@ fn parse_boards(input: String) -> Vec<Board> {
             data.push(nums);
         }
 
-        boards.push(Board { data, checked });
+        boards.push(Board { data, won: false });
     };
 
     boards
 }
 
-fn solve_game(winning_numbers: Vec<u32>, boards: &Vec<Board>) -> (usize, Option<&Board>, u32) {
-    let mut winner: Board;
-
-    // for i in 1..take
+fn solve_game(winning_numbers: Vec<u32>, boards: &mut Vec<Board>) -> Vec<(usize, u32)> {
+    let mut winning_boards: Vec<(usize, u32)> = Vec::new();
 
     for i in (BOARD_WIDTH - 1)..winning_numbers.len() {
         let current = &winning_numbers.get(0..i + 1).unwrap();
 
-        for board in boards.iter() {
-            // we iterate every row
-            for row in board.data.iter() {
-                if row.iter().all(|&item| current.contains(&item)) {
-                    let sum_unchecked = board.data.iter().flatten().filter(|x| !current.contains(&x)).fold(0, |acc, x| acc + x);
-                    return (current.len(), Some(board), sum_unchecked * current.last().unwrap());
+        for board in boards.iter_mut() {
+            if !board.won {
+                // we iterate every row
+                for row in board.data.iter() {
+                    if !board.won && row.iter().all(|&item| current.contains(&item)) {
+                        let sum_unchecked = board.data.iter().flatten().filter(|x| !current.contains(&x)).fold(0, |acc, x| acc + x);
+                        winning_boards.push((current.len(), sum_unchecked * current.last().unwrap()));
+                        board.won = true;
+                    }
                 }
-            }
 
-            // we interate every column
-            for column_index in 0..BOARD_WIDTH {
-                if (board.data.iter().map(|line| line.get(column_index).unwrap()).all(|item| current.contains(item))) {
-                    let sum_unchecked = board.data.iter().flatten().filter(|x| !current.contains(&x)).fold(0, |acc, x| acc + x);
-                    
-                    return (current.len(), Some(board), sum_unchecked * current.last().unwrap());
+                // we interate every column
+                for column_index in 0..BOARD_WIDTH {
+                    if !board.won && (board.data.iter().map(|line| line.get(column_index).unwrap()).all(|item| current.contains(item))) {
+                        let sum_unchecked = board.data.iter().flatten().filter(|x| !current.contains(&x)).fold(0, |acc, x| acc + x);
+                        winning_boards.push((current.len(), sum_unchecked * current.last().unwrap()));
+                        board.won = true;
+                    }
                 }
             }
         }
     }
 
-    return (winning_numbers.len(), None, 0);
-
+    return winning_boards;
 }
 
 fn main() {
@@ -78,16 +78,10 @@ fn main() {
         .map(|x| x.parse::<u32>().unwrap())
         .collect();
 
-    // let boards = lines.
+    let mut boards = parse_boards(data);
 
-    let boards = parse_boards(data);
+    let result = solve_game(winning_numbers, &mut boards);
+    let (score, last_sum) = result.last().unwrap();
 
-    // dbg!(&boards.get(0).unwrap().data);
-    
-    let (tries, board, sum_unchecked)  = solve_game(winning_numbers, &boards);
-    dbg!(tries);
-    dbg!(&board.unwrap().data);
-    dbg!(sum_unchecked);
-
-
+    dbg!(score, last_sum);
 }
